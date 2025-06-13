@@ -21,7 +21,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - mysql
+      mysql:
+        condition: service_started
     networks:
       - laravel
     tty: true
@@ -40,10 +41,6 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-p${MYSQL_PASSWORD}']
-      retries: 3
-      timeout: 5s
     volumes:
       - ./data/mysql:/var/lib/mysql
     networks:
@@ -60,7 +57,8 @@ services:
       - MEMORY_LIMIT=256M
       - MAX_EXECUTION_TIME=600
     depends_on:
-      - mysql
+      mysql:
+        condition: service_started
     networks:
       - laravel
 

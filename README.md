@@ -13,6 +13,18 @@ This project includes minimal patches to the CodeIgniter 3 core to ensure compat
 - **Docker Compose**: Streamlined multi-container orchestration
 - **PHP 8.4 Support**: Modern PHP version with performance improvements
 
+```
+❯ curl -I http://localhost:8801/
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Server: Caddy
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: PHP/8.4.8
+X-Xss-Protection: 1; mode=block
+Date: Fri, 13 Jun 2025 19:23:54 GMT
+```
+
 ![](./image/phpinfo.jpg "PHP Version 8.4")
 
 ## 📋 Prerequisites
@@ -64,7 +76,7 @@ frankenphp-ci3/
 ├── data/                # Persistent database storage
 ├── .env.example         # Environment variables template
 ├── compose.yml          # Docker Compose services definition
-└── README.md           # Project documentation
+└── README.md            # Project documentation
 ```
 
 ## 🛠️ Development
@@ -93,7 +105,42 @@ docker compose up -d --build
 
 ## 🔧 Configuration
 
-The application can be configured through:
+### Caddyfile Security Setup
+
+The Caddyfile includes security best practices:
+
+- **Strict-Transport-Security**: Enforces HTTPS connections
+- **X-Content-Type-Options**: Prevents MIME type sniffing
+- **X-Frame-Options**: Protects against clickjacking
+- **Content-Security-Policy**: Restricts resource loading
+- **X-XSS-Protection**: Enables cross-site scripting filter
+- **Restrict Access**: Block access to sensitive directories, dotfiles and certain file extensions except .well-known
+
+### Error Handling
+
+Custom error pages are served for:
+
+- 401 Unauthorized
+- 403 Forbidden
+- 404 Not Found
+- 500 Internal Server Error
+
+Error pages are located in `app/static/errors/` and can be customized. The Caddyfile handles errors using:
+
+```caddy
+handle_errors {
+    @401 {
+        status 401
+    }
+    handle @401 {
+        rewrite * /errors/401.html
+        file_server
+    }
+    // Similar handlers for 403, 404, 500
+}
+```
+
+The application can be further configured through:
 
 - **Environment variables**: Modify `.env` file
 - **CodeIgniter config**: Edit files in `app/application/config/`

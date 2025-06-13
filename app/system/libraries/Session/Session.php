@@ -423,7 +423,8 @@ class CI_Session {
 			{
 				// Add as many more characters as necessary to reach at least 160 bits
 				$sid_length += (int) ceil((160 % $bits) / $bits_per_character);
-				ini_set('session.sid_length', $sid_length);
+				// Deprecate in PHP8.4, just remove it
+				// ini_set('session.sid_length', $sid_length);
 			}
 		}
 

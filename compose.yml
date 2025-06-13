@@ -1,0 +1,71 @@
+services:
+  app:
+    build:
+      context: ./dockerfiles
+      dockerfile: frankenphp.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+    restart: always
+    environment:
+      - "SERVER_NAME=:80"
+      - "TZ=Asia/Jakarta"
+    ports:
+      - "8801:80"
+      # - "443:443"
+    volumes:
+      - ./app:/app
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - mysql
+    networks:
+      - laravel
+    tty: true
+
+  mysql:
+    image: mariadb:10.6
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      TZ: "Asia/Jakarta"
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-p${MYSQL_PASSWORD}']
+      retries: 3
+      timeout: 5s
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - laravel
+
+  pma:
+    image: phpmyadmin:5.2.1
+    ports:
+      - 8081:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+      - UPLOAD_LIMIT=256M
+      - MEMORY_LIMIT=256M
+      - MAX_EXECUTION_TIME=600
+    depends_on:
+      - mysql
+    networks:
+      - laravel
+
+# Volumes needed for Caddy certificates and configuration
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  laravel:

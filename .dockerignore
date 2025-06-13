@@ -1,0 +1,56 @@
+# Exclude VSCode settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Exclude local history
+.history/
+
+# Exclude VSIX files
+*.vsix
+
+# Exclude macOS-specific files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Exclude data directories
+data/*
+app/.well-known/*
+
+# Exclude PHP info file (development only)
+app/phpinfo.php
+
+# Exclude environment files
+.env
+.clinerules
+
+# Docker-specific exclusions
+dockerfiles/  # Exclude Dockerfiles themselves
+.gitignore    # Not needed in image
+compose.yml   # Docker compose file not needed in image
+image/*
+# Exclude development artifacts
+app/application/cache/*
+app/application/logs/*
+
+# Exclude Composer files (will be installed in Dockerfile)
+composer.lock
+composer.json
+vendor/

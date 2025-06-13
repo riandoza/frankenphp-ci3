@@ -1,0 +1,114 @@
+{
+    auto_https off
+    auto_https disable_redirects
+    skip_install_trust
+    log {
+        output stdout
+    }
+
+    frankenphp {
+        num_threads 4 # Sets the number of PHP threads to start. Default: 2x the number of available CPUs.
+		max_threads auto
+        php_ini max_execution_time 30
+    }
+}
+
+:80 {
+    root * /app
+    encode zstd br gzip
+
+    # Error handling
+    handle_errors {
+        @401 {
+            expression {http.error.status_code} == 401
+        }
+        handle @401 {
+            root * /app/static/errors
+            rewrite /401.html
+            file_server
+        }
+        @403 {
+            expression {http.error.status_code} == 403
+        }
+        handle @403 {
+            root * /app/static/errors
+            rewrite /403.html
+            file_server
+        }
+
+        @404 {
+            expression {http.error.status_code} == 404
+        }
+        handle @404 {
+            root * /app/static/errors
+            rewrite /404.html
+            file_server
+        }
+
+        @5xx `{err.status_code} >= 500 && {err.status_code} < 600`
+        handle @5xx {
+            root * /app/static/errors
+            rewrite /500.html
+            file_server
+        }
+        handle {
+            root * /app/static/errors
+            rewrite /err.html
+            file_server
+        }
+    }
+
+    header {
+        # Prevent clickjacking
+        X-Frame-Options "SAMEORIGIN"
+
+        # Disable MIME type sniffing
+        X-Content-Type-Options "nosniff"
+
+        # Enable XSS protection (legacy browsers)
+        X-XSS-Protection "1; mode=block"
+
+        # Optional: Modern security best practices (recommended)
+        # Strict CSP, Referrer Policy, Permissions Policy, etc.
+        # Referrer-Policy "strict-origin-when-cross-origin"
+        # Permissions-Policy "geolocation=(), microphone=()"
+    }
+
+    # Block access to sensitive directories
+    @blockedDirs {
+        path /vendor/* /application/* /system/* /api/ /assets/
+    }
+
+    # Block files (e.g., .env, .git, .htaccess)
+    @blockedFiles {
+        path_regexp /(composer\.(json|lock)|\.env|readme\.rst)$
+    }
+
+    # Restrict access to dot files and certain file extensions
+    @blockHidden {
+        path_regexp ^/\..*$
+        not path */.well-known/*
+    }
+
+    # Trigger errors for certain paths
+    error @blockedDirs "Forbidden" 403
+    error @blockedFiles "Forbidden" 403
+    error @blockHidden "Forbidden" 403
+
+    @static {
+		file
+		path_regexp (?i)\.(js|css|jpe?g|gif|png|ico|cur|gz|svgz?|mp[34]|og[gv]|web[mp]|htc|woff2?)$
+
+	}
+    header @static Cache-Control "public, immutable, stale-while-revalidate, max-age=31536000"
+
+    # Rewrite to index.php for non-static files
+    # First handle your known routes however you want to
+    handle / {
+        try_files {path} {path}/ /index.php?{query}
+    }
+
+    php_server {
+        root /app
+    }
+}

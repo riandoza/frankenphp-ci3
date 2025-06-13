@@ -36,7 +36,8 @@ RUN install-php-extensions \
 	opcache \
 	intl \
 	pcntl \
-	gd
+	gd \
+	mysqli
 
 # Production:
 # RUN cp $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini
